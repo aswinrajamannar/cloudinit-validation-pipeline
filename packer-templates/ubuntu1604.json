@@ -4,8 +4,8 @@
         "client_secret": null,
         "tenant_id": null,
         "subscription_id": null,
-        "git_url": null,
-        "git_branch": null
+        "cloudinit_git_url": null,
+        "cloudinit_git_hash": null
     },
     "builders": [{
         "type": "azure-arm",
