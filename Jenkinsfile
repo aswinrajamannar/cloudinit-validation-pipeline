@@ -38,7 +38,7 @@ pipeline {
                 sh 'export LC_TELEPHONE="en_US.UTF-8"'
                 sh 'export LC_MEASUREMENT="en_US.UTF-8"'
                 sh 'export LC_IDENTIFICATION="en_US.UTF-8"'
-                dir('unittests') {
+                dir('cloud-init') {
                     git url: "${CLOUDINIT_GIT_URL}", branch: "${CLOUDINIT_GIT_BRANCH}"
                     // Why do we set the git hash here, then pass the hash on
                     // to the packer script later? This is because developers
@@ -50,7 +50,9 @@ pipeline {
                     // then Ubuntu 18.04 might clone newer commits down.
                     // This hash is intended so that all cloud-inits cloned within
                     // packed VMs are consistent.
-                    sh 'export CLOUDINIT_GIT_HASH=$(git rev-parse --verify HEAD)'
+                    // Newly-exported envs aren't preserved because Jenkins limits
+                    // the scope of any new env variables to curly braces.
+                    sh 'echo $(git rev-parse --verify HEAD) > ../cloudinit_git_hash'
                 }
                 dir('pipeline-code') {
                     git url: "${CLOUDINIT_VALIDATION_PACKER_TEMPLATES_GIT_URL}", branch: "${CLOUDINIT_VALIDATION_PACKER_TEMPLATES_GIT_BRANCH}"
@@ -59,11 +61,10 @@ pipeline {
         }
         stage('Unit & Style Tests') {
             steps {
-                dir('unittests') {
-                    sh 'rm -rf ./.tox || true'
-                    // make test cache (which sometimes does not exist,
-                    // hence the "|| true" part of the command).
-                    // available to the jenkins user.
+                dir('cloud-init') {
+                    // make test cache available to the jenkins user,
+                    // which sometimes does not exist,
+                    // hence the "|| true" part of the command
                     sh 'chmod -R 777 ./.tox || true'
                     // Running docker slave as root, then running unit
                     // and style tests as user jenkins is needed because:
@@ -97,7 +98,7 @@ pipeline {
             steps {
                 dir('pipeline-code') {
                     withCredentials([azureServicePrincipal('azure-service-principal-azblitz')]) {
-                        sh 'packer validate -var "cloudinit_git_url=$CLOUDINIT_GIT_URL" -var "cloudinit_git_hash=$CLOUDINIT_GIT_HASH" -var "client_id=$AZURE_CLIENT_ID" -var "client_secret=$AZURE_CLIENT_SECRET" -var "tenant_id=$AZURE_TENANT_ID" -var "subscription_id=$AZURE_SUBSCRIPTION_ID" ./packer-templates/openlogic-centos-6.8.json'
+                        sh 'packer validate -var "cloudinit_git_url=$CLOUDINIT_GIT_URL" -var "cloudinit_git_hash=$(cat ../cloudinit_git_hash)" -var "client_id=$AZURE_CLIENT_ID" -var "client_secret=$AZURE_CLIENT_SECRET" -var "tenant_id=$AZURE_TENANT_ID" -var "subscription_id=$AZURE_SUBSCRIPTION_ID" ./packer-templates/openlogic-centos-6.8.json'
                         sh 'packer build -var "cloudinit_git_url=$CLOUDINIT_GIT_URL" -var "cloudinit_git_hash=$CLOUDINIT_GIT_HASH" -var "client_id=$AZURE_CLIENT_ID" -var "client_secret=$AZURE_CLIENT_SECRET" -var "tenant_id=$AZURE_TENANT_ID" -var "subscription_id=$AZURE_SUBSCRIPTION_ID" ./packer-templates/openlogic-centos-6.8.json'
                     }
                 }
