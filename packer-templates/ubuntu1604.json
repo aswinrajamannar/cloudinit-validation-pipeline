@@ -1,0 +1,40 @@
+{
+    "variables": {
+        "client_id": null,
+        "client_secret": null,
+        "tenant_id": null,
+        "subscription_id": null,
+        "git_url": null,
+        "git_branch": null
+    },
+    "builders": [{
+        "type": "azure-arm",
+
+        "client_id": "{{user `client_id`}}",
+        "client_secret": "{{user `client_secret`}}",
+        "tenant_id": "{{user `tenant_id`}}",
+        "subscription_id": "{{user `subscription_id`}}",
+
+        "managed_image_name": "ubuntu1604-{{timestamp}}-{{uuid}}",
+        "managed_image_resource_group_name": "cloudinit-validation-packed-images-eastus2euap",
+
+        "location": "eastus2euap",
+
+        "os_type": "Linux",
+        "image_publisher": "Canonical",
+        "image_offer": "UbuntuServer",
+        "image_sku": "16.04-LTS",
+        "image_version":"latest",
+
+        "vm_size": "Standard_DS1_v2"
+    }],
+    "provisioners": [{
+        "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+        "inline": [
+            "echo 'hello world file' > /etc/helloworldfile",
+            "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
+        ],
+        "inline_shebang": "/bin/sh -x",
+        "type": "shell"
+      }]
+}
