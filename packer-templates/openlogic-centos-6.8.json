@@ -1,0 +1,67 @@
+{
+    "variables": {
+        "client_id": null,
+        "client_secret": null,
+        "tenant_id": null,
+        "subscription_id": null,
+
+        "git_url": null,
+        "git_hash": null,
+
+        "managed_image_name": "openlogic-centos-68-{{timestamp}}-{{uuid}}",
+        "managed_image_resource_group_name": "cloudinit-validation-packed-images-eastus2euap",
+
+        "location": "eastus2euap",
+        "vm_size": "Standard_DS1_v2"
+    },
+    "builders": [{
+        "type": "azure-arm",
+
+        "client_id": "{{user `client_id`}}",
+        "client_secret": "{{user `client_secret`}}",
+        "tenant_id": "{{user `tenant_id`}}",
+        "subscription_id": "{{user `subscription_id`}}",
+
+        "managed_image_name": "{{user `managed_image_name`}}",
+        "managed_image_resource_group_name": "{{user `managed_image_resource_group_name`}}",
+
+        "location": "{{user `location`}}",
+        "vm_size": "{{user `vm_size`}}",
+
+        "os_type": "Linux",
+        "image_publisher": "OpenLogic",
+        "image_offer": "CentOS-HPC",
+        "image_sku": "6.8",
+        "image_version":"latest"
+    }],
+    "provisioners": [{
+        "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+        "inline": [
+            "curl 'https://setup.ius.io/' -o setup-ius.sh",
+            "sh setup-ius.sh",
+
+            "yum -y install python36u python36u-pip python36u-setuptools",
+            "ln -s /usr/bin/python3.6 /usr/bin/python3",
+
+            "yum -y install git",
+            "mkdir cloud-init",
+            "git clone {{user `cloudinit_git_url`}}",
+            "cd cloud-init",
+            "git reset --hard {{user `cloudinit_git_hash`}}",
+
+            "pip3.6 install -r requirements.txt",
+            "python3 setup.py build",
+            "python3 setup.py install --init=sysvinit",
+
+            "chkconfig --add cloud-init-local",
+            "chkconfig --add cloud-init",
+            "chkconfig --add cloud-config",
+            "chkconfig --add cloud-final",
+
+            "cloud-init clean -ls",
+            "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
+        ],
+        "inline_shebang": "/bin/sh -x",
+        "type": "shell"
+      }]
+}
