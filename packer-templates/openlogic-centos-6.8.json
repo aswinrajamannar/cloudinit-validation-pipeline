@@ -5,8 +5,8 @@
         "tenant_id": null,
         "subscription_id": null,
 
-        "git_url": null,
-        "git_hash": null,
+        "cloudinit_git_url": null,
+        "cloudinit_git_hash": null,
 
         "managed_image_name": "openlogic-centos-68-{{timestamp}}-{{uuid}}",
         "managed_image_resource_group_name": "cloudinit-validation-packed-images-eastus2euap",

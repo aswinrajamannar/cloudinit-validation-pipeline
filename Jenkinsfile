@@ -93,7 +93,7 @@ pipeline {
                 }
             }
         }
-        stage('Pack Ubuntu 16.04 LTS on Azure') {
+        stage('Pack OpenLogic CentOS 6.8 on Azure') {
             steps {
                 dir('pipeline-code') {
                     withCredentials([azureServicePrincipal('azure-service-principal-azblitz')]) {
