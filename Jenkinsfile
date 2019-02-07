@@ -123,7 +123,6 @@ pipeline {
                     }
                     withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
                         sh """
-                            ls -la
                             packer validate \
                                 -var 'managed_image_name=$managed_image_name' \
                                 -var 'managed_image_resource_group_name=$managed_image_resource_group_name' \
@@ -155,22 +154,18 @@ pipeline {
         }
         stage('Test Packed OpenLogic CentOS 6.8 Image') {
             steps {
-                script {
-                    tests = './packed-image-testing/tests-openlogic-centos-6.8.yml'
-                }
                 dir('pipeline-code') {
+                    script {
+                        tests = './packed-image-testing/tests-openlogic-centos-6.8.yml'
+                    }
                     withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
                         sh """
-                            python3 packed-image-testing/test-image.py  \
+                            python3 packed-image-testing/test-image.py \
                                 --managed_image_name $managed_image_name \
                                 --managed_image_resource_group_name $managed_image_resource_group_name \
                                 --location $location \
-                                --cloudinit_custom_data $cloudinit_custom_data \
                                 --tests $tests \
-                                --client_id $AZURE_CLIENT_ID' \
-                                --client_secret $AZURE_CLIENT_SECRET' \
-                                --tenant_id $AZURE_TENANT_ID' \
-                                --subscription_id $AZURE_SUBSCRIPTION_ID'
+                                --subscription_id $AZURE_SUBSCRIPTION_ID
                         """
                     }
                 }
