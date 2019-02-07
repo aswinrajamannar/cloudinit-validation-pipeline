@@ -8,11 +8,10 @@
         "cloudinit_git_url": null,
         "cloudinit_git_hash": null,
 
-        "managed_image_name": "openlogic-centos-68-{{timestamp}}-{{uuid}}",
-        "managed_image_resource_group_name": "cloudinit-validation-packed-images-eastus2euap",
+        "managed_image_name": null,
+        "managed_image_resource_group_name": null,
 
-        "location": "eastus2euap",
-        "vm_size": "Standard_DS1_v2"
+        "location": null
     },
     "builders": [{
         "type": "azure-arm",
@@ -26,7 +25,7 @@
         "managed_image_resource_group_name": "{{user `managed_image_resource_group_name`}}",
 
         "location": "{{user `location`}}",
-        "vm_size": "{{user `vm_size`}}",
+        "vm_size": "Standard_DS1_v2",
 
         "os_type": "Linux",
         "image_publisher": "OpenLogic",
