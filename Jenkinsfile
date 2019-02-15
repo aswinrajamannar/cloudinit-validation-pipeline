@@ -39,7 +39,7 @@ pipeline {
         }
     }
     triggers {
-        pollSCM 'H/2 * * * *'
+        pollSCM 'H 0 * * *'
     }
     stages {
         stage('Checkout') {
@@ -70,17 +70,6 @@ pipeline {
                     sh 'export LANG="en_US.UTF-8"'
                     sh 'export LANGUAGE="en_US.UTF-8"'
                     sh 'export LC_CTYPE="en_US.UTF-8"'
-                    sh 'export LC_NUMERIC="en_US.UTF-8"'
-                    sh 'export LC_TIME="en_US.UTF-8"'
-                    sh 'export LC_COLLATE="en_US.UTF-8"'
-                    sh 'export LC_MONETARY="en_US.UTF-8"'
-                    sh 'export LC_MESSAGES="en_US.UTF-8"'
-                    sh 'export LC_PAPER="en_US.UTF-8"'
-                    sh 'export LC_NAME="en_US.UTF-8"'
-                    sh 'export LC_ADDRESS="en_US.UTF-8"'
-                    sh 'export LC_TELEPHONE="en_US.UTF-8"'
-                    sh 'export LC_MEASUREMENT="en_US.UTF-8"'
-                    sh 'export LC_IDENTIFICATION="en_US.UTF-8"'
                     // make test cache available to the jenkins user,
                     // which sometimes does not exist,
                     // hence the "|| true" part of the command
