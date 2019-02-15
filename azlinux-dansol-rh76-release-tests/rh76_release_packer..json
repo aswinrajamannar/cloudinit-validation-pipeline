@@ -1,0 +1,97 @@
+{
+    "variables": {
+        "client_id": null,
+        "client_secret": null,
+        "tenant_id": null,
+        "subscription_id": null,
+
+        "cloudinit_git_url": null,
+        "cloudinit_git_hash": null,
+
+        "managed_image_name": null,
+        "managed_image_resource_group_name": null,
+
+        "location": null
+    },
+    "builders": [{
+        "type": "azure-arm",
+
+        "client_id": "{{user `client_id`}}",
+        "client_secret": "{{user `client_secret`}}",
+        "tenant_id": "{{user `tenant_id`}}",
+        "subscription_id": "{{user `subscription_id`}}",
+
+        "managed_image_name": "{{user `managed_image_name`}}",
+        "managed_image_resource_group_name": "{{user `managed_image_resource_group_name`}}",
+
+        "location": "{{user `location`}}",
+        "vm_size": "Standard_DS1_v2",
+
+        "os_type": "Linux",
+        "image_publisher": "RedHat",
+        "image_offer": "RHEL",
+        "image_sku": "7-RAW",
+        "image_version":"latest",
+
+        "azure_tags": {
+          "dept": "Engineering",
+          "task": "Image deployment"
+        }
+    }],
+    "provisioners": [{
+        "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+        "inline": [
+            "yum makecache fast",
+            "echo install cloud-init dependency",
+
+            "curl 'https://setup.ius.io/' -o setup-ius.sh",
+            "sh setup-ius.sh",
+
+            "yum -y install python36u python36u-pip python36u-setuptools",
+            "ln -s /usr/bin/python3.6 /usr/bin/python3",
+
+            "yum -y install git",
+            "mkdir cloud-init",
+            "git clone {{user `cloudinit_git_url`}} cloud-init",
+            "cd cloud-init",
+            "git reset --hard {{user `cloudinit_git_hash`}}",
+
+            "pip3.6 install -r requirements.txt",
+            "python3 setup.py build",
+            "python3 setup.py install --init=sysvinit",
+
+            "systemctl enable cloud-init-local",
+            "systemctl enable cloud-init",
+            "systemctl enable cloud-config",
+            "systemctl enable cloud-final",
+
+            "sed -i '/ - mounts/d' /etc/cloud/cloud.cfg",
+            "sed -i '/ - disk_setup/d' /etc/cloud/cloud.cfg",
+            "sed -i '/cloud_init_modules/a\\ - mounts' /etc/cloud/cloud.cfg",
+            "sed -i '/cloud_init_modules/a\\ - disk_setup' /etc/cloud/cloud.cfg",
+            "cloud-init clean",
+
+            "echo waagent provisioning config turned off",
+            "sed -i 's/Provisioning.Enabled=y/Provisioning.Enabled=n/g' /etc/waagent.conf",
+            "sed -i 's/Provisioning.UseCloudInit=n/Provisioning.UseCloudInit=y/g' /etc/waagent.conf",
+            "sed -i 's/ResourceDisk.Format=y/ResourceDisk.Format=n/g' /etc/waagent.conf",
+            "sed -i 's/ResourceDisk.EnableSwap=y/ResourceDisk.EnableSwap=n/g' /etc/waagent.conf",
+
+            "echo removing swapfile - this is enabled by default in RHEL 7.6 images",
+            "swapoff /mnt/resource/swapfile",
+            "rm /mnt/resource/swapfile",
+
+            "echo creating image to be linux agentless",
+            "echo Set DS properties - not setting this causes 2s",
+            "cat > /etc/cloud/cloud.cfg.d/91-azure_datasource.cfg <<EOF",
+            "# This configuration file is provided by the WALinuxAgent package.",
+            "datasource_list: [ Azure ]",
+            "EOF",
+
+            "echo waagent deprovisioning",
+            "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
+        ],
+        "inline_shebang": "/bin/sh -x",
+        "type": "shell"
+    }]
+}

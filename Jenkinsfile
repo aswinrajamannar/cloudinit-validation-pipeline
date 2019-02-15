@@ -18,7 +18,8 @@ cloudinit_git_hash = 'Unknown'
 // These variables can be set before passing them to the packer template for packing.
 // These variables *must* be passed to the scenario test scripts so
 // that the scenario test scripts can test the packed image.
-managed_image_name = 'openlogic-centos-68-69c6479e-9a7a-4241-b460-b4da707f734c' // this variable *must* be uniquely set for each pack because packer requires
+managed_image_name = 'Unknown'
+// managed_image_name = 'openlogic-centos-68-69c6479e-9a7a-4241-b460-b4da707f734c' // this variable *must* be uniquely set for each pack because packer requires
                                // the image name to not exist in the resource group.
 managed_image_resource_group_name = 'cloudinit-validation-packed-images-eastus2euap'
 location = 'eastus2euap'
@@ -114,12 +115,12 @@ pipeline {
                 }
             }
         }
-        stage('Pack OpenLogic CentOS 6.8 Image') {
+        stage('Pack RedHat 7.6 Image') {
             steps {
                 dir('pipeline-code') {
                     script {
-                        // managed_image_name = 'openlogic-centos-68-' + UUID.randomUUID().toString()
-                        packer_template = './packer-templates/openlogic-centos-6.8.json'
+                        managed_image_name = 'rh76_release_' + UUID.randomUUID().toString()
+                        packer_template = './azlinux-dansol-rh76-release-tests/rh76_release_packer.json'
                     }
                     withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
                         sh """
@@ -135,19 +136,19 @@ pipeline {
                                 -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
                                 ${packer_template}
                         """
-                        // sh """
-                        //     packer build \
-                        //         -var 'managed_image_name=$managed_image_name' \
-                        //         -var 'managed_image_resource_group_name=$managed_image_resource_group_name' \
-                        //         -var 'location=$location' \
-                        //         -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
-                        //         -var 'cloudinit_git_hash=$cloudinit_git_hash' \
-                        //         -var 'client_id=$AZURE_CLIENT_ID' \
-                        //         -var 'client_secret=$AZURE_CLIENT_SECRET' \
-                        //         -var 'tenant_id=$AZURE_TENANT_ID' \
-                        //         -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
-                        //         ${packer_template}
-                        // """
+                        sh """
+                            packer build \
+                                -var 'managed_image_name=$managed_image_name' \
+                                -var 'managed_image_resource_group_name=$managed_image_resource_group_name' \
+                                -var 'location=$location' \
+                                -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
+                                -var 'cloudinit_git_hash=$cloudinit_git_hash' \
+                                -var 'client_id=$AZURE_CLIENT_ID' \
+                                -var 'client_secret=$AZURE_CLIENT_SECRET' \
+                                -var 'tenant_id=$AZURE_TENANT_ID' \
+                                -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
+                                ${packer_template}
+                        """
                     }
                 }
             }
@@ -156,11 +157,11 @@ pipeline {
             steps {
                 dir('pipeline-code') {
                     script {
-                        tests = './packed-image-testing/openlogic-centos-6.8/openlogic-centos-6.8.yml'
+                        tests = 'azlinux-dansol-rh76-release-tests/rh76_release_tests.yml'
                     }
                     withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
                         sh """
-                            python3 packed-image-testing/test-image.py \
+                            python3 test-image.py \
                                 --managed_image_name $managed_image_name \
                                 --managed_image_resource_group_name $managed_image_resource_group_name \
                                 --location $location \

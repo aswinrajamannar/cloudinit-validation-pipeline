@@ -71,7 +71,7 @@ class SingleVMDeploymentTest:
         test_pw = 'Test!' + str(uuid.uuid4())
 
         command = ['az', 'vm', 'create',
-                '--authentication-type', 'password',
+                '--generate-ssh-keys',
                 '--admin-username', test_user,
                 '--admin-password', test_pw,
                 '--name', self.vmname,
@@ -85,8 +85,6 @@ class SingleVMDeploymentTest:
         output = subprocess.check_output(command)
 
         print(output)
-
-
 
 
 def main():
@@ -106,4 +104,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

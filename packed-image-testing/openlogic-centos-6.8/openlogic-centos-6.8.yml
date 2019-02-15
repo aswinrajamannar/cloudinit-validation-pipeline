@@ -1,6 +1,0 @@
-- test_name: 'test_1'
-  # deploy VM and run script within VM.
-  test_script: 'packed-image-testing/openlogic-centos-6.8/script1.sh'
-  # deploy VM with cloud-init custom-data
-  # optional, not required
-  cloudinit_file: 'packed-image-testing/openlogic-centos-6.8/openlogic-centos-6.8.cfg'
