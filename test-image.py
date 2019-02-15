@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+import json
 import subprocess
 import uuid
 import yaml
@@ -60,6 +61,11 @@ class TestImage:
                 rg=self.rg,
                 loc=self.loc,
                 cloudinit_fname=cloudinit_fname)
+        deployment_tester.runscript(test_script_fname)
+
+
+class VMRunScriptException(Exception):
+    pass
 
 
 class SingleVMDeploymentTest:
@@ -67,22 +73,30 @@ class SingleVMDeploymentTest:
         self.vmname = 'cloudinittest-' + str(uuid.uuid4())
         print('[*] Deploying VM with name: {}'.format(self.vmname))
 
-        test_user = 'dummy'
-        test_pw = 'Test!' + str(uuid.uuid4())
-
+        self.testuser = 'jenkins' # dummy user for test purposes
         command = ['az', 'vm', 'create',
                 '--generate-ssh-keys',
+                '--admin-username', self.testuser,
                 '--name', self.vmname,
                 '--image', img,
                 '--resource-group', rg,
                 '--location', loc]
         # if cloudinit_fname is not None:
         #     command.extend(['--custom-data', cloudinit_fname])
-        print(command)
 
         output = subprocess.check_output(command)
+        vm = json.loads(output)
+        self.ipaddr = vm['publicIpAddress']
+        print('[*] VM deployed with public ip address: {}'.format(self.ipaddr))
 
-        print(output)
+    def runscript(self, test_script_fname):
+        command = ['ssh', self.testuser + '@' + self.ipaddr, 'bash -s']
+        p = subprocess.Popen(command, stdin=subprocess.PIPE)
+        with open(test_script_fname) as f:
+            p_stdin = f.read()
+            p.communicate(input=p_stdin)[0]
+            if p.returncode != 0:
+                raise VMRunScriptException
 
 
 def main():
