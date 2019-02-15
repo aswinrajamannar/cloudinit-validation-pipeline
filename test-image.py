@@ -76,8 +76,8 @@ class SingleVMDeploymentTest:
                 '--image', img,
                 '--resource-group', rg,
                 '--location', loc]
-        if cloudinit_fname is not None:
-            command.extend(['--custom-data', cloudinit_fname])
+        # if cloudinit_fname is not None:
+        #     command.extend(['--custom-data', cloudinit_fname])
         print(command)
 
         output = subprocess.check_output(command)
