@@ -1,7 +1,19 @@
 #!groovy
 
-// Written by Johnson Shi johnson@johnsonshi.com
+// Written by Johnson Shi
 
+JENKINS_AZURE_SERVICE_PRINCIPAL_ID = 'azure-service-principal-azblitz'
+
+// These variables can be set before passing them to the packer template for packing.
+// These variables *must* be passed to the scenario test scripts so
+// that the scenario test scripts can test the packed image.
+MANAGED_IMAGE_NAME = 'Unknown' // dummy var. this variable *must* be uniquely set for each pack because packer requires
+                               // the image name to not exist in the resource group.
+MANAGED_IMAGE_RESOURCE_GROUP_NAME = 'cloudinit-validation-packed-images-eastus2euap'
+LOCATION = 'eastus2euap'
+
+CLOUDINIT_GIT_URL = 'https://git.launchpad.net/~johnsonshi/cloud-init/'
+CLOUDINIT_GIT_BRANCH = 'master'
 // Why do we set a variable to the git hash of the
 // checked out cloud-init repo, then pass the hash on
 // to the packer script later? This is because developers
@@ -14,14 +26,8 @@
 // This hash is intended so that all cloud-inits cloned within
 // packed VMs are consistent.
 CLOUDINIT_GIT_HASH = 'Unknown'
-
-// These variables can be set before passing them to the packer template for packing.
-// These variables *must* be passed to the scenario test scripts so
-// that the scenario test scripts can test the packed image.
-MANAGED_IMAGE_NAME = 'Unknown' // this variable *must* be uniquely set for each pack because packer requires
-                               // the image name to not exist in the resource group.
-MANAGED_IMAGE_RESOURCE_GROUP_NAME = 'cloudinit-validation-packed-images-eastus2euap'
-LOCATION = 'eastus2euap'
+CLOUDINIT_VALIDATION_PACKER_TEMPLATES_GIT_URL = 'https://github.com/johnsonshi/cloudinit-validation-pipeline.git'
+CLOUDINIT_VALIDATION_PACKER_TEMPLATES_GIT_BRANCH = 'master'
 
 pipeline {
     agent {
@@ -33,11 +39,7 @@ pipeline {
         }
     }
     environment {
-        CLOUDINIT_GIT_URL = 'https://git.launchpad.net/~johnsonshi/cloud-init/'
-        CLOUDINIT_GIT_BRANCH = 'master'
-        CLOUDINIT_VALIDATION_PACKER_TEMPLATES_GIT_URL = 'https://github.com/johnsonshi/cloudinit-validation-pipeline.git'
-        CLOUDINIT_VALIDATION_PACKER_TEMPLATES_GIT_BRANCH = 'master'
-        JENKINS_AZURE_SERVICE_PRINCIPAL_ID = 'azure-service-principal-azblitz'
+
     }
     triggers {
         pollSCM 'H/2 * * * *'
@@ -136,19 +138,19 @@ pipeline {
                                 -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
                                 ${packer_template}
                         """
-                        // sh """
-                        //     packer build \
-                        //         -var 'managed_image_name=$MANAGED_IMAGE_NAME' \
-                        //         -var 'managed_image_resource_group_name=$MANAGED_IMAGE_RESOURCE_GROUP_NAME' \
-                        //         -var 'location=$LOCATION' \
-                        //         -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
-                        //         -var 'cloudinit_git_hash=$CLOUDINIT_GIT_HASH' \
-                        //         -var 'client_id=$AZURE_CLIENT_ID' \
-                        //         -var 'client_secret=$AZURE_CLIENT_SECRET' \
-                        //         -var 'tenant_id=$AZURE_TENANT_ID' \
-                        //         -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
-                        //         ${packer_template}
-                        // """
+                        sh """
+                            packer build \
+                                -var 'managed_image_name=$MANAGED_IMAGE_NAME' \
+                                -var 'managed_image_resource_group_name=$MANAGED_IMAGE_RESOURCE_GROUP_NAME' \
+                                -var 'location=$LOCATION' \
+                                -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
+                                -var 'cloudinit_git_hash=$CLOUDINIT_GIT_HASH' \
+                                -var 'client_id=$AZURE_CLIENT_ID' \
+                                -var 'client_secret=$AZURE_CLIENT_SECRET' \
+                                -var 'tenant_id=$AZURE_TENANT_ID' \
+                                -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
+                                ${packer_template}
+                        """
                     }
                 }
             }
@@ -161,7 +163,7 @@ pipeline {
                     }
                     dir("pipeline-code/$test") {
                         // sh "bash test1.sh"
-                        sh "bash test1.sh"
+                        sh "bash test1.sh $MANAGED_IMAGE_NAME $MANAGED_IMAGE_RESOURCE_GROUP_NAME $LOCATION"
                     }
                 }
             }
