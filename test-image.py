@@ -72,8 +72,6 @@ class SingleVMDeploymentTest:
 
         command = ['az', 'vm', 'create',
                 '--generate-ssh-keys',
-                '--admin-username', test_user,
-                '--admin-password', test_pw,
                 '--name', self.vmname,
                 '--image', img,
                 '--resource-group', rg,
