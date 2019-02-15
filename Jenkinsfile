@@ -7,7 +7,7 @@ JENKINS_AZURE_SERVICE_PRINCIPAL_ID = 'azure-service-principal-azblitz'
 // These variables can be set before passing them to the packer template for packing.
 // These variables *must* be passed to the scenario test scripts so
 // that the scenario test scripts can test the packed image.
-MANAGED_IMAGE_NAME = 'rh76_release_d655a3ab-b09b-4b44-9d74-b2193853e8b6' // dummy var. this variable *must* be uniquely set for each pack because packer requires
+MANAGED_IMAGE_NAME = 'Unknown' // dummy var. this variable *must* be uniquely set for each pack because packer requires
                                // the image name to not exist in the resource group.
 MANAGED_IMAGE_RESOURCE_GROUP_NAME = 'cloudinit-validation-packed-images-eastus2euap'
 LOCATION = 'eastus2euap'
@@ -85,6 +85,7 @@ pipeline {
                     // which sometimes does not exist,
                     // hence the "|| true" part of the command
                     sh 'chmod -R 777 ./.tox || true'
+                    sh 'chmod -R 777 . || true'
                     // Running docker slave as root, then running unit
                     // and style tests as user jenkins is needed because:
                     //      1. If Docker slave workload is run without
@@ -109,7 +110,7 @@ pipeline {
                     //      4. Solution: Run Docker slave workload as root,
                     //          but run the unit tests with the pre-created jenkins
                     //          user using the command "su".
-                    // sh 'su jenkins -c "tox --notest"'
+                    sh 'su jenkins -c "tox"'
                 }
             }
         }
@@ -135,19 +136,19 @@ pipeline {
                                 -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
                                 ${packer_template}
                         """
-                        // sh """
-                        //     packer build \
-                        //         -var 'managed_image_name=$MANAGED_IMAGE_NAME' \
-                        //         -var 'managed_image_resource_group_name=$MANAGED_IMAGE_RESOURCE_GROUP_NAME' \
-                        //         -var 'location=$LOCATION' \
-                        //         -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
-                        //         -var 'cloudinit_git_hash=$CLOUDINIT_GIT_HASH' \
-                        //         -var 'client_id=$AZURE_CLIENT_ID' \
-                        //         -var 'client_secret=$AZURE_CLIENT_SECRET' \
-                        //         -var 'tenant_id=$AZURE_TENANT_ID' \
-                        //         -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
-                        //         ${packer_template}
-                        // """
+                        sh """
+                            packer build \
+                                -var 'managed_image_name=$MANAGED_IMAGE_NAME' \
+                                -var 'managed_image_resource_group_name=$MANAGED_IMAGE_RESOURCE_GROUP_NAME' \
+                                -var 'location=$LOCATION' \
+                                -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
+                                -var 'cloudinit_git_hash=$CLOUDINIT_GIT_HASH' \
+                                -var 'client_id=$AZURE_CLIENT_ID' \
+                                -var 'client_secret=$AZURE_CLIENT_SECRET' \
+                                -var 'tenant_id=$AZURE_TENANT_ID' \
+                                -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
+                                ${packer_template}
+                        """
                     }
                 }
             }

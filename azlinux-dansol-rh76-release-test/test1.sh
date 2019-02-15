@@ -15,14 +15,10 @@ TESTVM_USER='dummy'
 
 az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID --subscription $AZURE_SUBSCRIPTION_ID
 
-output=$(az vm create \
+az vm create \
     --generate-ssh-keys \
     --admin-username $TESTVM_USER \
     --name $TESTVM_NAME \
-    --image 'RedHat:RHEL:7-RAW:latest' \
+    --image $MANAGED_IMAGE_NAME \
     --resource-group $MANAGED_IMAGE_RESOURCE_GROUP_NAME \
-    --location $LOCATION)
-
-ip=$(echo $output | jq '.publicIpAddress' | sed -e s/\"//g)
-
-ssh $TESTVM_USER@$ip 'cloud-init status'
+    --location $LOCATION

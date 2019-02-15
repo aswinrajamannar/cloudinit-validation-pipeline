@@ -1,1 +1,0 @@
-python3 test-image.py --managed_image_name 'RedHat:RHEL:7-RAW:latest' --resource_group 'cloudinit-validation-packed-images-eastus2euap' --location 'eastus2euap' --testyaml './azlinux-dansol-rh76-release-tests/rh76_release_tests.yml' --subscription_id 'AzBlitz-test'
