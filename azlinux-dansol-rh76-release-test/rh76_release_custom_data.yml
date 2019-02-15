@@ -16,4 +16,3 @@ runcmd:
     - [ '$(userdel -r dummyuser 2>/dev/null || true)' ]
     - [ sed, -i, -r, 's/^PasswordAuthentication.*$/PasswordAuthentication no/', /etc/ssh/sshd_config]
     - [ service, sshd, restart ]
-

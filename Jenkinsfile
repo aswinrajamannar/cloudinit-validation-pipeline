@@ -13,16 +13,15 @@
 // then Ubuntu 18.04 might clone newer commits down.
 // This hash is intended so that all cloud-inits cloned within
 // packed VMs are consistent.
-cloudinit_git_hash = 'Unknown'
+CLOUDINIT_GIT_HASH = 'Unknown'
 
 // These variables can be set before passing them to the packer template for packing.
 // These variables *must* be passed to the scenario test scripts so
 // that the scenario test scripts can test the packed image.
-managed_image_name = 'Unknown'
-// managed_image_name = 'openlogic-centos-68-69c6479e-9a7a-4241-b460-b4da707f734c' // this variable *must* be uniquely set for each pack because packer requires
+MANAGED_IMAGE_NAME = 'Unknown' // this variable *must* be uniquely set for each pack because packer requires
                                // the image name to not exist in the resource group.
-managed_image_resource_group_name = 'cloudinit-validation-packed-images-eastus2euap'
-location = 'eastus2euap'
+MANAGED_IMAGE_RESOURCE_GROUP_NAME = 'cloudinit-validation-packed-images-eastus2euap'
+LOCATION = 'eastus2euap'
 
 pipeline {
     agent {
@@ -117,19 +116,20 @@ pipeline {
         }
         stage('Pack RedHat 7.6 Image') {
             steps {
-                dir('pipeline-code') {
+                withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
                     script {
-                        managed_image_name = 'rh76_release_' + UUID.randomUUID().toString()
-                        packer_template = './azlinux-dansol-rh76-release-tests/rh76_release_packer.json'
+                        test = 'azlinux-dansol-rh76-release-test'
+                        MANAGED_IMAGE_NAME = 'rh76_release_' + UUID.randomUUID().toString()
+                        packer_template = "rh76_release_packer.json"
                     }
-                    withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
+                    dir("pipeline-code/$test") {
                         sh """
                             packer validate \
-                                -var 'managed_image_name=$managed_image_name' \
-                                -var 'managed_image_resource_group_name=$managed_image_resource_group_name' \
-                                -var 'location=$location' \
+                                -var 'managed_image_name=$MANAGED_IMAGE_NAME' \
+                                -var 'managed_image_resource_group_name=$MANAGED_IMAGE_RESOURCE_GROUP_NAME' \
+                                -var 'location=$LOCATION' \
                                 -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
-                                -var 'cloudinit_git_hash=$cloudinit_git_hash' \
+                                -var 'cloudinit_git_hash=$CLOUDINIT_GIT_HASH' \
                                 -var 'client_id=$AZURE_CLIENT_ID' \
                                 -var 'client_secret=$AZURE_CLIENT_SECRET' \
                                 -var 'tenant_id=$AZURE_TENANT_ID' \
@@ -138,11 +138,11 @@ pipeline {
                         """
                         // sh """
                         //     packer build \
-                        //         -var 'managed_image_name=$managed_image_name' \
-                        //         -var 'managed_image_resource_group_name=$managed_image_resource_group_name' \
-                        //         -var 'location=$location' \
+                        //         -var 'managed_image_name=$MANAGED_IMAGE_NAME' \
+                        //         -var 'managed_image_resource_group_name=$MANAGED_IMAGE_RESOURCE_GROUP_NAME' \
+                        //         -var 'location=$LOCATION' \
                         //         -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
-                        //         -var 'cloudinit_git_hash=$cloudinit_git_hash' \
+                        //         -var 'cloudinit_git_hash=$CLOUDINIT_GIT_HASH' \
                         //         -var 'client_id=$AZURE_CLIENT_ID' \
                         //         -var 'client_secret=$AZURE_CLIENT_SECRET' \
                         //         -var 'tenant_id=$AZURE_TENANT_ID' \
@@ -153,7 +153,7 @@ pipeline {
                 }
             }
         }
-        stage('Test Packed OpenLogic CentOS 6.8 Image') {
+        stage('Test Packed RedHat 7.6 Image') {
             steps {
                 withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
                     script {
@@ -161,7 +161,7 @@ pipeline {
                     }
                     dir("pipeline-code/$test") {
                         // sh "bash test1.sh"
-                        sh "echo $managed_image_name"
+                        sh "bash test1.sh"
                     }
                 }
             }

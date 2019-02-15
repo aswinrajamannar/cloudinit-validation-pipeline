@@ -1,6 +1,0 @@
-- test_name: 'test_1'
-  # deploy VM and run script within VM.
-  test_script: 'azlinux-dansol-rh76-release-tests/script1.sh'
-  # deploy VM with cloud-init custom-data
-  # optional, not required
-  cloudinit_file: 'azlinux-dansol-rh76-release-tests/rh76_release_custom_data.yml'
