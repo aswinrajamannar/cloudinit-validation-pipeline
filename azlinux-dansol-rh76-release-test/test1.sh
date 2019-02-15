@@ -15,10 +15,14 @@ TESTVM_USER='dummy'
 
 az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID --subscription $AZURE_SUBSCRIPTION_ID
 
-az vm create \
+output=$(az vm create \
     --generate-ssh-keys \
     --admin-username $TESTVM_USER \
     --name $TESTVM_NAME \
     --image $MANAGED_IMAGE_NAME \
     --resource-group $MANAGED_IMAGE_RESOURCE_GROUP_NAME \
-    --location $LOCATION
+    --location $LOCATION)
+
+ip=$(cat $output | jq '.publicIpAddress' | sed -e s/\"//g)
+
+ssh $TESTVM_USER@$ip 'bash -s' < 'cloud-init status'
