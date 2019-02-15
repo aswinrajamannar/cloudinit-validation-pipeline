@@ -136,38 +136,32 @@ pipeline {
                                 -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
                                 ${packer_template}
                         """
-                        sh """
-                            packer build \
-                                -var 'managed_image_name=$managed_image_name' \
-                                -var 'managed_image_resource_group_name=$managed_image_resource_group_name' \
-                                -var 'location=$location' \
-                                -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
-                                -var 'cloudinit_git_hash=$cloudinit_git_hash' \
-                                -var 'client_id=$AZURE_CLIENT_ID' \
-                                -var 'client_secret=$AZURE_CLIENT_SECRET' \
-                                -var 'tenant_id=$AZURE_TENANT_ID' \
-                                -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
-                                ${packer_template}
-                        """
+                        // sh """
+                        //     packer build \
+                        //         -var 'managed_image_name=$managed_image_name' \
+                        //         -var 'managed_image_resource_group_name=$managed_image_resource_group_name' \
+                        //         -var 'location=$location' \
+                        //         -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
+                        //         -var 'cloudinit_git_hash=$cloudinit_git_hash' \
+                        //         -var 'client_id=$AZURE_CLIENT_ID' \
+                        //         -var 'client_secret=$AZURE_CLIENT_SECRET' \
+                        //         -var 'tenant_id=$AZURE_TENANT_ID' \
+                        //         -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
+                        //         ${packer_template}
+                        // """
                     }
                 }
             }
         }
         stage('Test Packed OpenLogic CentOS 6.8 Image') {
             steps {
-                dir('pipeline-code') {
+                withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
                     script {
-                        tests = 'azlinux-dansol-rh76-release-tests/rh76_release_tests.yml'
+                        test = 'azlinux-dansol-rh76-release-test'
                     }
-                    withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
-                        sh """
-                            python3 test-image.py \
-                                --managed_image_name $managed_image_name \
-                                --managed_image_resource_group_name $managed_image_resource_group_name \
-                                --location $location \
-                                --tests $tests \
-                                --subscription_id $AZURE_SUBSCRIPTION_ID
-                        """
+                    dir("pipeline-code/$test") {
+                        // sh "bash test1.sh"
+                        sh "echo $managed_image_name"
                     }
                 }
             }
