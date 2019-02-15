@@ -10,7 +10,7 @@ AZURE_CLIENT_SECRET=$5
 AZURE_TENANT_ID=$6
 AZURE_SUBSCRIPTION_ID=$7
 
-TESTVM_NAME='test_vm_name'
+TESTVM_NAME="civtest-$(cat /proc/sys/kernel/random/uuid)"
 TESTVM_USER='dummy'
 
 az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID --subscription $AZURE_SUBSCRIPTION_ID
@@ -19,10 +19,10 @@ output=$(az vm create \
     --generate-ssh-keys \
     --admin-username $TESTVM_USER \
     --name $TESTVM_NAME \
-    --image $MANAGED_IMAGE_NAME \
+    --image 'RedHat:RHEL:7-RAW:latest' \
     --resource-group $MANAGED_IMAGE_RESOURCE_GROUP_NAME \
     --location $LOCATION)
 
-ip=$(cat $output | jq '.publicIpAddress' | sed -e s/\"//g)
+ip=$(echo $output | jq '.publicIpAddress' | sed -e s/\"//g)
 
-ssh $TESTVM_USER@$ip 'bash -s' < 'cloud-init status'
+ssh $TESTVM_USER@$ip 'cloud-init status'

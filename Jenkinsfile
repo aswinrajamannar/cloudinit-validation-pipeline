@@ -7,7 +7,7 @@ JENKINS_AZURE_SERVICE_PRINCIPAL_ID = 'azure-service-principal-azblitz'
 // These variables can be set before passing them to the packer template for packing.
 // These variables *must* be passed to the scenario test scripts so
 // that the scenario test scripts can test the packed image.
-MANAGED_IMAGE_NAME = 'Unknown' // dummy var. this variable *must* be uniquely set for each pack because packer requires
+MANAGED_IMAGE_NAME = 'rh76_release_d655a3ab-b09b-4b44-9d74-b2193853e8b6' // dummy var. this variable *must* be uniquely set for each pack because packer requires
                                // the image name to not exist in the resource group.
 MANAGED_IMAGE_RESOURCE_GROUP_NAME = 'cloudinit-validation-packed-images-eastus2euap'
 LOCATION = 'eastus2euap'
@@ -118,7 +118,7 @@ pipeline {
                 withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
                     script {
                         test = 'azlinux-dansol-rh76-release-test'
-                        MANAGED_IMAGE_NAME = 'rh76_release_' + UUID.randomUUID().toString()
+                        // MANAGED_IMAGE_NAME = 'rh76_release_' + UUID.randomUUID().toString()
                         packer_template = "rh76_release_packer.json"
                     }
                     dir("pipeline-code/$test") {
@@ -135,19 +135,19 @@ pipeline {
                                 -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
                                 ${packer_template}
                         """
-                        sh """
-                            packer build \
-                                -var 'managed_image_name=$MANAGED_IMAGE_NAME' \
-                                -var 'managed_image_resource_group_name=$MANAGED_IMAGE_RESOURCE_GROUP_NAME' \
-                                -var 'location=$LOCATION' \
-                                -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
-                                -var 'cloudinit_git_hash=$CLOUDINIT_GIT_HASH' \
-                                -var 'client_id=$AZURE_CLIENT_ID' \
-                                -var 'client_secret=$AZURE_CLIENT_SECRET' \
-                                -var 'tenant_id=$AZURE_TENANT_ID' \
-                                -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
-                                ${packer_template}
-                        """
+                        // sh """
+                        //     packer build \
+                        //         -var 'managed_image_name=$MANAGED_IMAGE_NAME' \
+                        //         -var 'managed_image_resource_group_name=$MANAGED_IMAGE_RESOURCE_GROUP_NAME' \
+                        //         -var 'location=$LOCATION' \
+                        //         -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
+                        //         -var 'cloudinit_git_hash=$CLOUDINIT_GIT_HASH' \
+                        //         -var 'client_id=$AZURE_CLIENT_ID' \
+                        //         -var 'client_secret=$AZURE_CLIENT_SECRET' \
+                        //         -var 'tenant_id=$AZURE_TENANT_ID' \
+                        //         -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
+                        //         ${packer_template}
+                        // """
                     }
                 }
             }
@@ -159,7 +159,6 @@ pipeline {
                         test = 'azlinux-dansol-rh76-release-test'
                     }
                     dir("pipeline-code/$test") {
-                        // sh "bash test1.sh"
                         sh """
                             chmod +x test1.sh && \
                                 ./test1.sh \
