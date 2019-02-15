@@ -1,1 +1,1 @@
-python3 ./packed-image-testing/test-image.py --managed_image_name 'IMG' --resource_group 'RG' --location 'LOC' --testyaml './packed-image-testing/tests-openlogic-centos-6.8.yml' --subscription_id 'SUBID'
+python3 ./packed-image-testing/test-image.py --managed_image_name 'MicrosoftTestLinuxPPS:joshisnowoffer2:joshisnowsku2:0.0.1' --resource_group 'cloudinit-validation-packed-images-eastus2euap' --location 'eastus2euap' --testyaml './packed-image-testing/openlogic-centos-6.8/openlogic-centos-6.8.yml' --subscription_id 'AzBlitz-test'

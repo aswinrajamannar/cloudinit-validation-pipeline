@@ -156,7 +156,7 @@ pipeline {
             steps {
                 dir('pipeline-code') {
                     script {
-                        tests = './packed-image-testing/tests-openlogic-centos-6.8.yml'
+                        tests = './packed-image-testing/openlogic-centos-6.8/openlogic-centos-6.8.yml'
                     }
                     withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
                         sh """
