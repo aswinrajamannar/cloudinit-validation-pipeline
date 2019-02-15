@@ -38,9 +38,7 @@ pipeline {
             registryCredentialsId 'civdocker-credential'
         }
     }
-    triggers {
-        pollSCM 'H 0 * * *'
-    }
+    triggers { pollSCM 'H 0 * * *' }
     stages {
         stage('Checkout') {
             steps {
@@ -61,54 +59,12 @@ pipeline {
                 }
             }
         }
-        stage('Unit & Style Tests') {
-            steps {
-                dir('cloud-init') {
-                    // unit tests have issues if the locale isn't set properly
-                    sh 'export LC_ALL="en_US.UTF-8"'
-                    sh 'export LC_CTYPE="en_US.UTF-8"'
-                    sh 'export LANG="en_US.UTF-8"'
-                    sh 'export LANGUAGE="en_US.UTF-8"'
-                    sh 'export LC_CTYPE="en_US.UTF-8"'
-                    // make test cache available to the jenkins user,
-                    // which sometimes does not exist,
-                    // hence the "|| true" part of the command
-                    sh 'chmod -R 777 ./.tox || true'
-                    sh 'chmod -R 777 . || true'
-                    // Running docker slave as root, then running unit
-                    // and style tests as user jenkins is needed because:
-                    //      1. If Docker slave workload is run without
-                    //          specifying the user (user that workload is run as),
-                    //          Docker slave with a default Unix system account,
-                    //          which means a Unix account with no homedir.
-                    //          Line of code within tox that will cause problems:
-                    //              "pwd.getpwuid(os.getuid()).pw_dir"
-                    //          because Unix system account created has no homedir,
-                    //          the created user has no homedir in the /etc/passwd.
-                    //          Look up the docs of each of the above python commands.
-                    //      2. Running Docker slave workload with root user specified
-                    //          (args -u root:root) causes unit tests to fail because
-                    //          of an error "No such file or directory: 'ud'".
-                    //          This has been reproduced in several vanilla cloud-init
-                    //          repos and vanilla systems. Running unit tests as root
-                    //          causes tests to fail as tests aren't OK with root-env.
-                    //      3. Running Docker slave workload with a specified
-                    //          pre-created jenkins user causes permission denied issues
-                    //          when writing to the Jenkins log file within the
-                    //          slave container.
-                    //      4. Solution: Run Docker slave workload as root,
-                    //          but run the unit tests with the pre-created jenkins
-                    //          user using the command "su".
-                    sh 'su jenkins -c "tox"'
-                }
-            }
-        }
         stage('Pack RedHat 7.6 Image') {
             steps {
                 withCredentials([azureServicePrincipal("$JENKINS_AZURE_SERVICE_PRINCIPAL_ID")]) {
                     script {
                         test = 'azlinux-dansol-rh76-release-test'
-                        // MANAGED_IMAGE_NAME = 'rh76_release_' + UUID.randomUUID().toString()
+                        MANAGED_IMAGE_NAME = 'rh76_release_' + UUID.randomUUID().toString()
                         packer_template = "rh76_release_packer.json"
                     }
                     dir("pipeline-code/$test") {
