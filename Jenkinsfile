@@ -38,9 +38,6 @@ pipeline {
             registryCredentialsId 'civdocker-credential'
         }
     }
-    environment {
-
-    }
     triggers {
         pollSCM 'H/2 * * * *'
     }
@@ -138,19 +135,19 @@ pipeline {
                                 -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
                                 ${packer_template}
                         """
-                        sh """
-                            packer build \
-                                -var 'managed_image_name=$MANAGED_IMAGE_NAME' \
-                                -var 'managed_image_resource_group_name=$MANAGED_IMAGE_RESOURCE_GROUP_NAME' \
-                                -var 'location=$LOCATION' \
-                                -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
-                                -var 'cloudinit_git_hash=$CLOUDINIT_GIT_HASH' \
-                                -var 'client_id=$AZURE_CLIENT_ID' \
-                                -var 'client_secret=$AZURE_CLIENT_SECRET' \
-                                -var 'tenant_id=$AZURE_TENANT_ID' \
-                                -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
-                                ${packer_template}
-                        """
+                        // sh """
+                        //     packer build \
+                        //         -var 'managed_image_name=$MANAGED_IMAGE_NAME' \
+                        //         -var 'managed_image_resource_group_name=$MANAGED_IMAGE_RESOURCE_GROUP_NAME' \
+                        //         -var 'location=$LOCATION' \
+                        //         -var 'cloudinit_git_url=$CLOUDINIT_GIT_URL' \
+                        //         -var 'cloudinit_git_hash=$CLOUDINIT_GIT_HASH' \
+                        //         -var 'client_id=$AZURE_CLIENT_ID' \
+                        //         -var 'client_secret=$AZURE_CLIENT_SECRET' \
+                        //         -var 'tenant_id=$AZURE_TENANT_ID' \
+                        //         -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
+                        //         ${packer_template}
+                        // """
                     }
                 }
             }
@@ -163,7 +160,17 @@ pipeline {
                     }
                     dir("pipeline-code/$test") {
                         // sh "bash test1.sh"
-                        sh "bash test1.sh $MANAGED_IMAGE_NAME $MANAGED_IMAGE_RESOURCE_GROUP_NAME $LOCATION"
+                        sh """
+                            chmod +x test1.sh && \
+                                ./test1.sh \
+                                $MANAGED_IMAGE_NAME \
+                                $MANAGED_IMAGE_RESOURCE_GROUP_NAME \
+                                $LOCATION \
+                                $AZURE_CLIENT_ID \
+                                $AZURE_CLIENT_SECRET \
+                                $AZURE_TENANT_ID \
+                                $AZURE_SUBSCRIPTION_ID
+                        """
                     }
                 }
             }
